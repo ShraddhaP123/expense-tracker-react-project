@@ -343,14 +343,6 @@ export default function App() {
         {/* Page content with tab transition */}
         <main className="flex-1 p-4 lg:p-6 pb-32 lg:pb-6 overflow-auto">
 
-          {activeTab === 'india' && (
-            <div className="grid grid-cols-3 gap-3 mb-6 animate-slide-up">
-              <StatCard label="All-Time Sent" value={formatCurrency(lifetime.totalSentToIndia)} sub={`${lifetime.remittances.length} transfers`} icon={Send} color="orange" />
-              <StatCard label="All-Time Invested" value={formatCurrency(lifetime.totalInvested)} sub={`${lifetime.investments.length} entries · $${INVESTMENT_FIXED}/each`} icon={TrendingUp} color="indigo" />
-              <StatCard label="All-Time Misc" value={formatCurrency(lifetime.totalExpenses)} sub="Across all months" icon={LayoutDashboard} color="purple" />
-            </div>
-          )}
-
           <Suspense fallback={<SkeletonPanel />}>
 
             {/* Dashboard — month slide */}
@@ -371,15 +363,21 @@ export default function App() {
               </div>
             )}
 
-            {/* Other tabs — page enter */}
+            {/* Trends */}
             {activeTab === 'trends' && (
               <div key={`trends-${tabKey}`} className="animate-page-enter">
                 <YearlyTrends year={selectedYear} />
               </div>
             )}
 
+            {/* Transfers — stat cards + tracker in same wrapper */}
             {activeTab === 'india' && (
-              <div key={`india-${tabKey}`} className="animate-page-enter">
+              <div key={`india-${tabKey}`} className="animate-page-enter space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <StatCard label="All-Time Sent" value={formatCurrency(lifetime.totalSentToIndia)} sub={`${lifetime.remittances.length} transfers`} icon={Send} color="orange" />
+                  <StatCard label="All-Time Invested" value={formatCurrency(lifetime.totalInvested)} sub={`${lifetime.investments.length} entries · $${INVESTMENT_FIXED}/each`} icon={TrendingUp} color="indigo" />
+                  <StatCard label="All-Time Misc" value={formatCurrency(lifetime.totalExpenses)} sub="Across all months" icon={LayoutDashboard} color="purple" />
+                </div>
                 <IndiaTracker />
               </div>
             )}
