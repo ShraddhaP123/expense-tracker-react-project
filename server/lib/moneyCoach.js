@@ -111,8 +111,8 @@ function buildWhatWentWell(snapshot, unusualPurchases) {
   if (snapshot.totalSpent === 0) {
     return 'You have not logged much yet, which gives the app time to learn your baseline before making stronger calls.';
   }
-  if (snapshot.config && snapshot.totalSpent <= snapshot.config.misc_budget + snapshot.config.invest_amount) {
-    return `You are still inside your planned monthly budget, with $${Math.max((snapshot.config.misc_budget + snapshot.config.invest_amount) - snapshot.totalSpent, 0).toFixed(0)} of room left.`;
+  if (snapshot.config && snapshot.totalSpent <= snapshot.config.misc_budget) {
+    return `You are still inside your planned monthly budget, with $${Math.max(snapshot.config.misc_budget - snapshot.totalSpent, 0).toFixed(0)} of room left.`;
   }
   if (unusualPurchases.length === 0) {
     return 'Nothing looked wildly out of pattern, which usually means this month was driven by normal life rather than one expensive surprise.';
@@ -313,7 +313,7 @@ export function buildMonthlyAnalysis({
     .sort((left, right) => Math.abs(right.changeAmount) - Math.abs(left.changeAmount))
     .slice(0, 5);
 
-  const effectiveBudget = (current.config?.misc_budget ?? average(trailing.map((entry) => entry.config?.misc_budget ?? 0))) + (current.config?.invest_amount ?? 2500);
+  const effectiveBudget = current.config?.misc_budget ?? average(trailing.map((entry) => entry.config?.misc_budget ?? 0));
   const projectedMonthEndSpend = month === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
     ? current.totalSpent + ((current.totalSpent / Math.max(now.getDate(), 1)) * Math.max(daysInMonth(month) - now.getDate(), 0))
     : Math.max(current.totalSpent, trailingAverageSpent);
@@ -345,7 +345,7 @@ export function buildMonthlyAnalysis({
       trailingAverageSpent,
       trailingAverageExpenseOnly,
       budget: effectiveBudget,
-      remainingBudget: effectiveBudget - current.totalSpent,
+      remainingBudget: effectiveBudget - current.totalExpenses,
       expectedRecurringForMonth,
       recurringAlreadyLogged: current.totalRecurringExpenses,
       projectedMonthEndSpend,
@@ -383,12 +383,12 @@ export function buildAffordabilityCheck({
   const trailing = trailingSummaries.map(createSnapshot);
   const trailingAverageSpent = average(trailing.map((entry) => entry.totalSpent));
   const trailingAverageMonthlyBudget = average(
-    trailing.map((entry) => (entry.config?.misc_budget ?? 0) + (entry.config?.invest_amount ?? 2500))
+    trailing.map((entry) => entry.config?.misc_budget ?? 0)
   );
-  const fallbackMiscBudget = Math.max((trailingAverageMonthlyBudget || 2500) - 2500, 0);
-  const budget = (current.config?.misc_budget ?? fallbackMiscBudget) + (current.config?.invest_amount ?? 2500);
+  const fallbackMiscBudget = trailingAverageMonthlyBudget || 0;
+  const budget = current.config?.misc_budget ?? fallbackMiscBudget;
   const recurringGap = Math.max(expectedRecurringForMonth - current.totalRecurringExpenses, 0);
-  const remainingBudget = budget - current.totalSpent;
+  const remainingBudget = budget - current.totalExpenses;
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const isCurrentMonth = month === currentMonthKey;
   const remainingDays = Math.max(daysInMonth(month) - (isCurrentMonth ? now.getDate() : 0), 0);

@@ -314,6 +314,8 @@ export const getInvestments  = (month?: string, year?: number) => {
 };
 export const createInvestment = (data: { note: string; date: string; amount?: number }) =>
   req<Investment>('/investments', { method: 'POST', body: JSON.stringify(data) });
+export const updateInvestment = (id: number, data: Partial<Investment>) =>
+  req<Investment>(`/investments/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteInvestment = (id: number) =>
   req<{ ok: boolean }>(`/investments/${id}`, { method: 'DELETE' });
 

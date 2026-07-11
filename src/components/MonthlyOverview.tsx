@@ -248,7 +248,6 @@ export default function MonthlyOverview({ month }: Props) {
                 <div className="mx-4 mt-3 pt-3 border-t border-white/8 space-y-2.5">
                   {[
                     { label: '💸 Misc', amount: totalExpenses, budget: miscBudget, color: '#f97316' },
-                    { label: '📈 Investments', amount: totalInvested, budget: 2500, color: '#6366f1' },
                   ].map(({ label, amount, budget, color }) => (
                     <div key={label}>
                       <div className="flex justify-between text-xs text-gray-500 mb-1.5">
@@ -265,6 +264,12 @@ export default function MonthlyOverview({ month }: Props) {
                     <div className="flex items-center justify-between rounded-xl bg-amber-500/8 border border-amber-500/20 px-3 py-2 mt-1">
                       <span className="text-xs text-amber-300">🇮🇳 India <span className="text-gray-600">(outside budget)</span></span>
                       <span className="text-xs font-semibold text-amber-400">{formatCurrency(totalRemittances)}</span>
+                    </div>
+                  )}
+                  {totalInvested > 0 && (
+                    <div className="flex items-center justify-between rounded-xl bg-indigo-500/8 border border-indigo-500/20 px-3 py-2 mt-1">
+                      <span className="text-xs text-indigo-300">📈 Investments <span className="text-gray-600">(outside budget)</span></span>
+                      <span className="text-xs font-semibold text-indigo-400">{formatCurrency(totalInvested)}</span>
                     </div>
                   )}
                 </div>

@@ -427,7 +427,7 @@ async function buildMoneyStoryTimeline(userId) {
   if (highestSpend?.total > 0) {
     events.push({ type: 'highest-spend', month: highestSpend.month, monthLabel: highestSpend.monthLabel, title: 'Biggest spending month', body: `${highestSpend.monthLabel} was your heaviest month so far.`, amount: highestSpend.total, tone: 'purple', icon: 'spike' });
   }
-  const bestBudgetMonth = months.filter((e) => e.config).map((e) => ({ ...e, remaining: (e.config.misc_budget + e.config.invest_amount) - e.total })).filter((e) => e.remaining > 0).sort((a, b) => b.remaining - a.remaining)[0];
+  const bestBudgetMonth = months.filter((e) => e.config).map((e) => ({ ...e, remaining: e.config.misc_budget - e.expenses })).filter((e) => e.remaining > 0).sort((a, b) => b.remaining - a.remaining)[0];
   if (bestBudgetMonth) {
     events.push({ type: 'best-budget', month: bestBudgetMonth.month, monthLabel: bestBudgetMonth.monthLabel, title: 'Best cushion month', body: `You finished ${bestBudgetMonth.monthLabel} with the most room left in your plan.`, amount: bestBudgetMonth.remaining, tone: 'emerald', icon: 'savings' });
   }
@@ -730,6 +730,23 @@ app.post('/api/investments', authMiddleware, async (req, res) => {
     const row = (await client.execute({ sql: 'SELECT * FROM investments WHERE id = ?', args: [Number(result.lastInsertRowid)] })).rows[0];
     res.status(201).json(row);
   } catch (err) { console.error(err); res.status(500).json({ error: 'Failed to create investment' }); }
+});
+
+app.put('/api/investments/:id', authMiddleware, async (req, res) => {
+  try {
+    const existing = (await client.execute({ sql: 'SELECT * FROM investments WHERE id = ? AND user_id = ?', args: [Number(req.params.id), req.user.id] })).rows[0] ?? null;
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+    const { note, date, amount } = req.body;
+    const newDate   = date ?? existing.date;
+    const newNote   = note ?? existing.note;
+    const newAmount = amount !== undefined ? Number(amount) : existing.amount;
+    await client.execute({
+      sql: 'UPDATE investments SET amount=?, original_amount=?, note=?, date=?, month=?, year=? WHERE id=?',
+      args: [newAmount, newAmount, newNote, newDate, toMonthKey(newDate), toYear(newDate), Number(req.params.id)],
+    });
+    const row = (await client.execute({ sql: 'SELECT * FROM investments WHERE id = ?', args: [Number(req.params.id)] })).rows[0];
+    res.json(row);
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Failed to update investment' }); }
 });
 
 app.delete('/api/investments/:id', authMiddleware, async (req, res) => {

@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { Trash2, Edit2, Check, X, Search, SlidersHorizontal, Repeat, ChevronLeft, ChevronRight } from 'lucide-react';
 import { type Expense, type Remittance, type Investment } from '../api/client';
-import { removeExpense, removeRemittance, removeInvestment, editExpense } from '../hooks/useDB';
+import { removeExpense, removeRemittance, removeInvestment, editExpense, editRemittance, editInvestment } from '../hooks/useDB';
 import { CATEGORY_EMOJI, CATEGORY_COLORS, formatCurrency, formatOriginalCurrency } from '../db/database';
 import { cn } from '../utils/cn';
+import DateField from './ui/DateField';
 
 const PAGE_SIZE = 25;
 
@@ -45,14 +46,14 @@ function rowMeta(row: Row) {
 }
 
 function TxCard({
-  row, index, isEditing, isConfirming, editDesc, editAmt,
+  row, index, isEditing, isConfirming, editDesc, editAmt, editDate,
   onEdit, onSaveEdit, onCancelEdit, onDelete,
-  onEditDesc, onEditAmt, exiting,
+  onEditDesc, onEditAmt, onEditDate, exiting,
 }: {
   row: Row; index: number; isEditing: boolean; isConfirming: boolean;
-  editDesc: string; editAmt: string;
+  editDesc: string; editAmt: string; editDate: string;
   onEdit: () => void; onSaveEdit: () => void; onCancelEdit: () => void;
-  onDelete: () => void; onEditDesc: (v: string) => void; onEditAmt: (v: string) => void;
+  onDelete: () => void; onEditDesc: (v: string) => void; onEditAmt: (v: string) => void; onEditDate: (v: string) => void;
   exiting: boolean;
 }) {
   const meta    = rowMeta(row);
@@ -61,11 +62,12 @@ function TxCard({
   return (
     <div
       className={cn(
-        'tx-card group relative flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-white/6 bg-[var(--bg-surface)] cursor-default',
+        'tx-card group relative flex items-center gap-4 px-4 py-3.5 rounded-2xl border bg-[var(--bg-surface)] cursor-default transition-colors',
+        isEditing ? 'border-purple-500/50 shadow-[0_0_0_1px_rgba(139,92,246,0.25),0_8px_24px_rgba(139,92,246,0.15)]' : 'border-white/6',
         exiting ? 'animate-slide-out' : `animate-slide-up ${stagger}`,
       )}
       style={{ '--tx-glow': meta.color } as React.CSSProperties}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = `0 6px 24px rgba(0,0,0,0.35), 0 0 0 1px ${meta.color}28`; }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = isEditing ? '' : `0 6px 24px rgba(0,0,0,0.35), 0 0 0 1px ${meta.color}28`; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = ''; }}
     >
       {/* Color left accent */}
@@ -111,18 +113,24 @@ function TxCard({
         </div>
 
         {/* Bottom row: category pill + date */}
-        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0"
-            style={{ backgroundColor: `${meta.color}20`, color: meta.color }}>
-            {meta.label}
-          </span>
-          {row.kind === 'expense' && (row.data as Expense).recurring_rule_id && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 shrink-0">
-              <Repeat size={9} /> Recurring
+        {isEditing ? (
+          <div className="mt-2">
+            <DateField value={editDate} onChange={onEditDate} compact />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0"
+              style={{ backgroundColor: `${meta.color}20`, color: meta.color }}>
+              {meta.label}
             </span>
-          )}
-          <span className="text-[11px] text-gray-600">{row.data.date}</span>
-        </div>
+            {row.kind === 'expense' && (row.data as Expense).recurring_rule_id && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 shrink-0">
+                <Repeat size={9} /> Recurring
+              </span>
+            )}
+            <span className="text-[11px] text-gray-600">{row.data.date}</span>
+          </div>
+        )}
       </div>
 
       {/* Actions — visible on hover/tap or when editing/confirming */}
@@ -143,12 +151,10 @@ function TxCard({
           </>
         ) : (
           <>
-            {row.kind === 'expense' && (
-              <button onClick={onEdit}
-                className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500/30 transition-colors">
-                <Edit2 size={13} />
-              </button>
-            )}
+            <button onClick={onEdit}
+              className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500/30 transition-colors">
+              <Edit2 size={13} />
+            </button>
             <button
               onClick={onDelete}
               title={isConfirming ? 'Tap again to confirm' : 'Delete'}
@@ -174,6 +180,7 @@ export default function TransactionsTable({ expenses, remittances, investments }
   const [editId,        setEditId]        = useState<number | null>(null);
   const [editDesc,      setEditDesc]      = useState('');
   const [editAmt,       setEditAmt]       = useState('');
+  const [editDate,      setEditDate]      = useState('');
   const [searchQuery,   setSearchQuery]   = useState('');
   const [kindFilter,    setKindFilter]    = useState<'all' | Row['kind']>('all');
   const [categoryFilter,setCategoryFilter]= useState<'all' | string>('all');
@@ -253,22 +260,40 @@ export default function TransactionsTable({ expenses, remittances, investments }
     }
   };
 
+  const [editKind, setEditKind] = useState<Row['kind'] | null>(null);
+
   const startEdit = (row: Row) => {
-    if (row.kind !== 'expense') return;
+    setEditKind(row.kind);
     setEditId(row.data.id);
-    setEditDesc(row.data.description);
+    setEditDesc(row.kind === 'expense' ? (row.data as Expense).description : (row.data as Remittance | Investment).note ?? '');
     setEditAmt(String(row.data.original_amount ?? row.data.amount));
+    setEditDate(row.data.date);
   };
 
   const saveEdit = async () => {
-    if (editId == null) return;
-    const row = expenses.find(e => e.id === editId);
-    await editExpense(editId, {
-      description: editDesc,
-      originalAmount: parseFloat(editAmt),
-      currencyCode: row?.currency_code,
-    } as Partial<Expense> & { originalAmount: number; currencyCode?: string });
+    if (editId == null || editKind == null) return;
+    const amount = parseFloat(editAmt);
+    if (editKind === 'expense') {
+      const row = expenses.find(e => e.id === editId);
+      await editExpense(editId, {
+        description: editDesc,
+        originalAmount: amount,
+        currencyCode: row?.currency_code,
+        date: editDate,
+      } as Partial<Expense> & { originalAmount: number; currencyCode?: string });
+    } else if (editKind === 'india') {
+      const row = remittances.find(r => r.id === editId);
+      await editRemittance(editId, {
+        note: editDesc,
+        originalAmount: amount,
+        currencyCode: row?.currency_code,
+        date: editDate,
+      } as Partial<Remittance> & { originalAmount: number; currencyCode?: string });
+    } else {
+      await editInvestment(editId, { note: editDesc, amount, date: editDate });
+    }
     setEditId(null);
+    setEditKind(null);
   };
 
   if (rows.length === 0) {
@@ -365,7 +390,7 @@ export default function TransactionsTable({ expenses, remittances, investments }
               <div className="space-y-2">
                 {group.rows.map((row, i) => {
                   const key         = `${row.kind}-${row.data.id}`;
-                  const isEditing   = row.kind === 'expense' && editId === row.data.id;
+                  const isEditing   = editId === row.data.id && editKind === row.kind;
                   const isConfirming = confirmDelete === key;
                   const exiting     = exitingKey === key;
                   return (
@@ -378,12 +403,14 @@ export default function TransactionsTable({ expenses, remittances, investments }
                       exiting={exiting}
                       editDesc={editDesc}
                       editAmt={editAmt}
+                      editDate={editDate}
                       onEdit={() => startEdit(row)}
                       onSaveEdit={saveEdit}
-                      onCancelEdit={() => setEditId(null)}
+                      onCancelEdit={() => { setEditId(null); setEditKind(null); }}
                       onDelete={() => handleDelete(row)}
                       onEditDesc={setEditDesc}
                       onEditAmt={setEditAmt}
+                      onEditDate={setEditDate}
                     />
                   );
                 })}

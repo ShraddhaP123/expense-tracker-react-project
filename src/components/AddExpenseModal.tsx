@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PlusCircle, Zap } from 'lucide-react';
 import Modal from './ui/Modal';
+import DateField from './ui/DateField';
 import { addExpense, addRemittance, addInvestment } from '../hooks/useDB';
 import { CATEGORIES, SUPPORTED_CURRENCIES, normalizeCurrencyCode, type ExpenseCategory } from '../db/database';
 
@@ -110,8 +111,10 @@ export default function AddExpenseModal({ onClose, defaultMonth: _defaultMonth }
     <button
       type="button"
       onClick={() => setType(t)}
-      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${
-        type === t ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'
+      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${
+        type === t
+          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-[0_2px_10px_rgba(139,92,246,0.4)]'
+          : 'text-gray-400 hover:text-white hover:bg-white/5'
       }`}
     >
       {emoji} {label}
@@ -165,13 +168,7 @@ export default function AddExpenseModal({ onClose, defaultMonth: _defaultMonth }
         {/* Date */}
         <div>
           <label className="block text-sm text-gray-400 mb-1.5">Date</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            className="w-full bg-[var(--bg-primary)] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors"
-          />
+          <DateField value={date} onChange={setDate} />
         </div>
 
         {/* Investment: configurable amount */}
@@ -268,7 +265,7 @@ export default function AddExpenseModal({ onClose, defaultMonth: _defaultMonth }
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white font-medium py-2.5 rounded-xl transition-all"
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl shadow-[0_4px_16px_rgba(139,92,246,0.35)] hover:shadow-[0_6px_20px_rgba(139,92,246,0.5)] transition-all"
         >
           <PlusCircle size={16} />
           {loading ? 'Saving...' : 'Add Entry'}

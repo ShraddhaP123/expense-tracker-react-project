@@ -1,30 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Target, Save, Info, AlertTriangle } from 'lucide-react';
 import { saveMonthConfig, useMonthSummary } from '../hooks/useDB';
-import { INVESTMENT_FIXED, formatCurrency, parseMonthLabel } from '../db/database';
+import { formatCurrency, parseMonthLabel } from '../db/database';
 
 interface Props { month: string; }
 
 export default function BudgetSetup({ month }: Props) {
   const { config } = useMonthSummary(month);
   const [miscBudget,    setMiscBudget]    = useState('');
-  const [investAmount,  setInvestAmount]  = useState(String(INVESTMENT_FIXED));
   const [saved,         setSaved]         = useState(false);
 
   useEffect(() => {
     if (config) {
       setMiscBudget(String(config.misc_budget));
-      if (config.invest_amount) setInvestAmount(String(config.invest_amount));
     }
   }, [config]);
 
-  const invest     = parseFloat(investAmount) || 0;
-  const misc       = parseFloat(miscBudget)   || 0;
-  const totalBudget = misc + invest;
+  const misc = parseFloat(miscBudget) || 0;
 
   const handleSave = async () => {
-    if (misc < 0 || invest < 0) return;
-    await saveMonthConfig(month, misc, invest);
+    if (misc < 0) return;
+    await saveMonthConfig(month, misc, config?.invest_amount ?? 0);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -37,23 +33,6 @@ export default function BudgetSetup({ month }: Props) {
       </div>
 
       <div className="space-y-4">
-        {/* Investment amount — editable */}
-        <div>
-          <label className="block text-sm text-gray-400 mb-1.5">📈 Monthly Investment</label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
-            <input
-              type="number"
-              min={0}
-              value={investAmount}
-              onChange={(e) => setInvestAmount(e.target.value)}
-              placeholder="e.g. 2500"
-              className="w-full bg-[var(--bg-primary)] border border-white/10 rounded-xl pl-8 pr-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors"
-            />
-          </div>
-          <p className="text-xs text-gray-500 mt-1">Auto-deducted from your monthly budget</p>
-        </div>
-
         {/* Misc Budget */}
         <div>
           <label className="block text-sm text-gray-400 mb-1.5">💰 Misc / Living Budget</label>
@@ -76,7 +55,7 @@ export default function BudgetSetup({ month }: Props) {
             <Info size={14} className="text-gray-400" />
             <span className="text-sm text-gray-300">Total Monthly Budget</span>
           </div>
-          <span className="text-lg font-bold text-white">{formatCurrency(totalBudget)}</span>
+          <span className="text-lg font-bold text-white">{formatCurrency(misc)}</span>
         </div>
 
         {/* Save button */}
@@ -95,7 +74,7 @@ export default function BudgetSetup({ month }: Props) {
           style={{ backgroundColor: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.4)' }}>
           <AlertTriangle size={16} style={{ color: '#d97706' }} className="shrink-0 mt-0.5" />
           <p className="text-sm leading-relaxed" style={{ color: '#92400e' }}>
-            <span className="font-semibold">India remittances are not counted in your budget</span> — they are tracked separately under Transfers and do not affect your remaining budget.
+            <span className="font-semibold">India remittances and investments are not counted in your budget</span> — they are tracked separately and do not affect your remaining budget.
           </p>
         </div>
       </div>

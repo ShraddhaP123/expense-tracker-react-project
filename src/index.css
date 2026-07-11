@@ -235,3 +235,41 @@
 /* Recharts in light mode */
 [data-theme="light"] .recharts-text { fill: #6b7280 !important; }
 [data-theme="light"] .recharts-cartesian-grid line { stroke: rgba(0,0,0,0.06) !important; }
+
+/* Pastel accent text on light surfaces — darken for readable contrast on white/light-gray backgrounds */
+[data-theme="light"] .text-purple-300  { color: #7c3aed !important; }
+[data-theme="light"] .text-purple-200  { color: #6d28d9 !important; }
+[data-theme="light"] .text-indigo-300  { color: #4f46e5 !important; }
+[data-theme="light"] .text-indigo-200  { color: #4338ca !important; }
+[data-theme="light"] .text-amber-300   { color: #b45309 !important; }
+[data-theme="light"] .text-amber-200   { color: #92400e !important; }
+[data-theme="light"] .text-red-300     { color: #dc2626 !important; }
+[data-theme="light"] .text-red-200     { color: #b91c1c !important; }
+[data-theme="light"] .text-emerald-300 { color: #059669 !important; }
+[data-theme="light"] .text-emerald-200 { color: #047857 !important; }
+[data-theme="light"] .text-blue-300    { color: #2563eb !important; }
+[data-theme="light"] .text-pink-300    { color: #db2777 !important; }
+[data-theme="light"] .text-cyan-300    { color: #0891b2 !important; }
+[data-theme="light"] .text-orange-300  { color: #c2410c !important; }
+[data-theme="light"] .text-yellow-300  { color: #a16207 !important; }
+
+/* ...but keep those accent colors light/pastel where they sit on a permanently-dark surface
+   (inline dark-gradient hero cards, etc.) so they don't get double-darkened into low contrast */
+[data-theme="light"] [style*="linear-gradient"] .text-purple-300  { color: #d8b4fe !important; }
+[data-theme="light"] [style*="linear-gradient"] .text-purple-200  { color: #e9d5ff !important; }
+[data-theme="light"] [style*="linear-gradient"] .text-indigo-300  { color: #a5b4fc !important; }
+[data-theme="light"] [style*="linear-gradient"] .text-amber-300   { color: #fcd34d !important; }
+[data-theme="light"] [style*="linear-gradient"] .text-red-300     { color: #fca5a5 !important; }
+[data-theme="light"] [style*="linear-gradient"] .text-emerald-300 { color: #6ee7b7 !important; }
+
+/* Hero card headline/body text — Tailwind opacity-suffixed utilities (e.g. text-purple-300/60)
+   aren't plain class selectors, so the rules above never matched them; and .text-white was
+   being force-darkened to near-black even on this permanently-dark gradient card, making the
+   hero amounts unreadable in light mode. */
+[data-theme="light"] [style*="linear-gradient"] .text-white       { color: #ffffff !important; }
+[data-theme="light"] [style*="linear-gradient"] [class*="text-purple-300"] { color: #d8b4fe !important; }
+[data-theme="light"] [style*="linear-gradient"] [class*="text-purple-200"] { color: #e9d5ff !important; }
+[data-theme="light"] [style*="linear-gradient"] [class*="text-indigo-300"] { color: #a5b4fc !important; }
+[data-theme="light"] [style*="linear-gradient"] [class*="text-amber-300"]  { color: #fcd34d !important; }
+[data-theme="light"] [style*="linear-gradient"] [class*="text-red-300"]    { color: #fca5a5 !important; }
+[data-theme="light"] [style*="linear-gradient"] [class*="text-emerald-300"] { color: #6ee7b7 !important; }

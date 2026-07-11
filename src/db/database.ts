@@ -69,8 +69,6 @@ export const db = new ExpenseDB();
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-export const INVESTMENT_FIXED = 2500;
-
 export const SUPPORTED_CURRENCIES = {
   USD: { code: 'USD', name: 'US Dollar', usdRate: 1 },
   EUR: { code: 'EUR', name: 'Euro', usdRate: 1.08 },

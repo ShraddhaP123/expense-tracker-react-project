@@ -6,18 +6,16 @@ import {
   getRecurringExpenseRules, createRecurringExpenseRule, updateRecurringExpenseRule, deleteRecurringExpenseRule,
   createExpense, updateExpense, deleteExpense,
   createRemittance, updateRemittance, deleteRemittance,
-  createInvestment, deleteInvestment,
+  createInvestment, updateInvestment, deleteInvestment,
   saveMonthConfig as apiSaveMonthConfig,
   downloadBackupJSON, downloadBackupCSV,
   importBackup, clearAllData as apiClearAllData,
   type MonthSummary, type LifetimeTotals, type YearlySummary,
-  type Expense, type RecurringExpenseRule, type Remittance,
+  type Expense, type RecurringExpenseRule, type Remittance, type Investment,
   type MonthlyAnalysis,
   type MoneyStoryEvent, type SubscriptionDriftItem,
 } from '../api/client';
 import { showToast } from '../components/Toast';
-
-export const INVESTMENT_FIXED = 2500;
 
 // ─── Global refresh bus ───────────────────────────────────────────────────────
 // Any component can call `triggerRefresh()` and all useData hooks will re-fetch.
@@ -78,8 +76,8 @@ export function useMonthSummary(month: string) {
   const totalRemittances = data.remittances.reduce((s, r) => s + r.amount, 0);
   const totalInvested    = data.investments.reduce((s, i) => s + i.amount, 0);
   const miscBudget       = data.config?.misc_budget ?? 0;
-  const monthlyBudget    = miscBudget + INVESTMENT_FIXED;
-  const totalSpent       = totalExpenses + totalInvested; // India excluded from budget
+  const monthlyBudget    = miscBudget;
+  const totalSpent       = totalExpenses; // India and Investment excluded from budget
   const remaining        = monthlyBudget - totalSpent;
 
   const byCategory: Record<string, number> = {};
@@ -314,6 +312,10 @@ export async function removeRemittance(id: number) {
 
 export async function addInvestment(data: { note: string; date: string; amount?: number }) {
   return withFlash(() => createInvestment(data));
+}
+
+export async function editInvestment(id: number, data: Partial<Investment>) {
+  return withFlash(() => updateInvestment(id, data));
 }
 
 export async function removeInvestment(id: number) {

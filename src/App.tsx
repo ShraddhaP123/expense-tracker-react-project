@@ -4,7 +4,7 @@ import {
   Plus, ChevronLeft, ChevronRight, Sun, Moon, Menu, X,
   Download, AlertTriangle, CheckCircle2, LogOut, User,
 } from 'lucide-react';
-import { toMonthKey, parseMonthLabel, formatCurrency, INVESTMENT_FIXED } from './db/database';
+import { toMonthKey, parseMonthLabel, formatCurrency } from './db/database';
 import { useMonthSummary, useLifetimeTotals, exportBackupJSON, getLastBackupMeta } from './hooks/useDB';
 import { useTheme } from './hooks/useTheme';
 import { useAuth } from './hooks/useAuth';
@@ -375,7 +375,7 @@ export default function App() {
               <div key={`india-${tabKey}`} className="animate-page-enter space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <StatCard label="All-Time Sent" value={formatCurrency(lifetime.totalSentToIndia)} sub={`${lifetime.remittances.length} transfers`} icon={Send} color="orange" />
-                  <StatCard label="All-Time Invested" value={formatCurrency(lifetime.totalInvested)} sub={`${lifetime.investments.length} entries · $${INVESTMENT_FIXED}/each`} icon={TrendingUp} color="indigo" />
+                  <StatCard label="All-Time Invested" value={formatCurrency(lifetime.totalInvested)} sub={`${lifetime.investments.length} entries`} icon={TrendingUp} color="indigo" />
                   <StatCard label="All-Time Misc" value={formatCurrency(lifetime.totalExpenses)} sub="Across all months" icon={LayoutDashboard} color="purple" />
                 </div>
                 <IndiaTracker />

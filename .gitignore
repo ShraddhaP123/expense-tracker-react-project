@@ -6,3 +6,4 @@ dist/
 expenseiq.db
 expenseiq.db-shm
 expenseiq.db-wal
+.vercel
