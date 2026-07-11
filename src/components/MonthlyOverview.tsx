@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, Send, Target, Zap } from 'lucide-react';
-import { useMonthSummary, useMonthlyAnalysis } from '../hooks/useDB';
+import { TrendingUp, TrendingDown, Send, Zap } from 'lucide-react';
+import { useMonthSummary } from '../hooks/useDB';
 import { useCountUp } from '../hooks/useCountUp';
 import { formatCurrency, CATEGORY_COLORS, CATEGORY_EMOJI, parseMonthLabel } from '../db/database';
 import {
@@ -95,11 +95,8 @@ export default function MonthlyOverview({ month }: Props) {
     miscBudget, monthlyBudget, totalSpent, remaining, byCategory,
   } = useMonthSummary(month);
 
-  const { analysis } = useMonthlyAnalysis(month);
-  const projectedSpend     = analysis?.totals?.projectedMonthEndSpend ?? null;
-  const overBudget         = remaining < 0;
-  const projectedOverBudget = projectedSpend !== null && monthlyBudget > 0 && projectedSpend > monthlyBudget;
-  const budgetPct          = monthlyBudget > 0 ? (totalSpent / monthlyBudget) * 100 : 0;
+  const overBudget = remaining < 0;
+  const budgetPct  = monthlyBudget > 0 ? (totalSpent / monthlyBudget) * 100 : 0;
 
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
 
@@ -186,35 +183,6 @@ export default function MonthlyOverview({ month }: Props) {
           )}
         </div>
       </div>
-
-      {/* ── Forecast pill ── */}
-      {projectedSpend !== null && (
-        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-2xl border px-4 py-3.5 transition-all animate-slide-up stagger-4 ${
-          projectedOverBudget
-            ? 'bg-red-500/8 border-red-500/25 hover:bg-red-500/12'
-            : 'bg-emerald-500/8 border-emerald-500/20 hover:bg-emerald-500/12'
-        }`}>
-          <div className="flex items-center gap-2.5">
-            <div className={`p-1.5 rounded-lg shrink-0 ${projectedOverBudget ? 'bg-red-500/20' : 'bg-emerald-500/20'}`}>
-              <Target size={14} className={projectedOverBudget ? 'text-red-400' : 'text-emerald-400'} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-200">Projected month-end</p>
-              <p className="text-xs text-gray-500">Based on recurring expenses + pace</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between sm:block sm:text-right pl-9 sm:pl-0">
-            <AnimatedAmount value={projectedSpend} className={`text-lg font-bold ${projectedOverBudget ? 'text-red-400' : 'text-emerald-400'}`} />
-            {monthlyBudget > 0 && (
-              <p className="text-xs text-gray-500">
-                {projectedOverBudget
-                  ? `${formatCurrency(projectedSpend - monthlyBudget)} over`
-                  : `${formatCurrency(monthlyBudget - projectedSpend)} buffer`}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── Main grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-5">

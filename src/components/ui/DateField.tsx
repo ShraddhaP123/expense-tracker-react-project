@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -28,7 +28,7 @@ function label(dateKey: string) {
 }
 
 export default function DateField({ value, onChange, compact }: Props) {
-  const nativeRef = useRef<HTMLInputElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const today = toKey(new Date());
   const yesterday = shiftDay(today, -1);
   const isCustom = value !== today && value !== yesterday;
@@ -38,21 +38,13 @@ export default function DateField({ value, onChange, compact }: Props) {
     { key: yesterday, text: 'Yesterday' },
   ];
 
-  const openNativePicker = () => {
-    const el = nativeRef.current;
-    if (!el) return;
-    // Prefer the native picker UI when supported (Chromium)
-    if (typeof el.showPicker === 'function') el.showPicker();
-    else el.focus();
-  };
-
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
       {chips.map(({ key, text }) => (
         <button
           key={key}
           type="button"
-          onClick={() => onChange(key)}
+          onClick={() => { onChange(key); setPickerOpen(false); }}
           className={cn(
             'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
             value === key
@@ -82,14 +74,28 @@ export default function DateField({ value, onChange, compact }: Props) {
         <ChevronRight size={13} />
       </button>
 
-      <div className="relative ml-auto">
+      <div className="ml-auto flex items-center gap-1.5">
+        {pickerOpen && (
+          <input
+            type="date"
+            value={value}
+            max={today}
+            autoFocus
+            onChange={(e) => { if (e.target.value) onChange(e.target.value); }}
+            onBlur={() => setPickerOpen(false)}
+            className={cn(
+              'bg-[var(--bg-primary)] border border-purple-500/40 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors',
+              compact ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm',
+            )}
+          />
+        )}
         <button
           type="button"
-          onClick={openNativePicker}
+          onClick={() => setPickerOpen(o => !o)}
           className={cn(
             'flex items-center gap-1.5 rounded-full text-xs font-semibold border transition-all',
             compact ? 'px-2.5 py-1' : 'px-3 py-1.5',
-            isCustom
+            isCustom || pickerOpen
               ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-transparent shadow-[0_2px_10px_rgba(139,92,246,0.35)]'
               : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-gray-200',
           )}
@@ -97,15 +103,6 @@ export default function DateField({ value, onChange, compact }: Props) {
           <Calendar size={12} />
           {isCustom ? label(value) : 'Pick date'}
         </button>
-        <input
-          ref={nativeRef}
-          type="date"
-          value={value}
-          max={today}
-          onChange={(e) => { if (e.target.value) onChange(e.target.value); }}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          tabIndex={-1}
-        />
       </div>
     </div>
   );
